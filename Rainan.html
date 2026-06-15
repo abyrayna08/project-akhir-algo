@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Manajemen Data Mahasiswa (OOP & Algoritma)</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+            --light: #ecf0f1;
+            --dark: #1e272e;
+        }
+        body {
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          margin: 0;
+          padding: 20px;
+          min-height: 100vh;
+
+          background-color: #f5f5f5;
+          background-image: url('logo unpam.png');
+          background-repeat: repeat;
+          background-size: 150px;
+          background-attachment: fixed;
+
+          color: #333;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        
+        /* AUTH / LOGIN WINDOW */
+        .login-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 80vh;
+        }
+        .login-card {
+            background: rgba(255,255,255,0.95);
+            padding: 35px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.25);
+            width: 100%;
+            max-width: 420px;
+            backdrop-filter: blur(10px);
+        }
+        .login-card h2 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: var(--primary);
+        }
+
+        /* MAIN DASHBOARD (HIDDEN BY DEFAULT) */
+        #mainApp {
+            display: none;
+        }
+
+        header {
+           text-align: center;
+           padding: 25px;
+           background: linear-gradient(135deg,#2563eb,#7c3aed);
+           color: white;
+           border-radius: 18px;
+           margin-bottom: 20px;
+           position: relative;
+           box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+        }
+        .btn-logout {
+            position: absolute;
+            right: 20px;
+            top: 30px;
+            background-color: var(--danger);
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+        }
+        @media (max-width: 768px) {
+            .grid { grid-template-columns: 1fr; }
+            .btn-logout { position: static; margin-top: 10px; width: 100%; }
+        }
+        .card {
+            background: rgba(255,255,255,0.95);
+            padding: 20px;
+            border-radius: 18px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+
+        }
+        h2 { border-bottom: 2px solid var(--light); padding-bottom: 10px; margin-top: 0; }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .btn-primary { background-color: var(--secondary); }
+        .btn-success { background-color: var(--success); }
+        .btn-danger { background-color: var(--danger); }
+        .btn-block { width: 100%; }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th { background: linear-gradient(135deg,#2563eb,#7c3aed);
+    color: white; }
+        tr:hover { background-color: #f1f2f6; }
+        
+        .flex-actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <div id="loginPage" class="login-wrapper">
+        <div class="login-card">
+            <h2>Sistem Log In</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" placeholder="Masukkan username " required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="Masukkan password " required>
+                </div>
+                <button type="submit" class="btn-primary btn-block" style="margin-top: 10px;">Masuk Aplikasi</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="mainApp">
+        <header>        
+    <h1>🎓 Portal Akademik Mahasiswa</h1>
+    <p> Sistem Data Mahasiswa </p>
+    <button class="btn-logout" onclick="auth.logout()">Log Out</button>
+       </header>
+
+        <div class="grid">
+            <div>
+                <div class="card">
+                    <h2>Form Data Mahasiswa</h2>
+                    <form id="studentForm">
+                        <input type="hidden" id="editIndex" value="-1">
+                        <div class="form-group">
+                            <label for="nim">NIM (Harus 8 Digit Angka)</label>
+                            <input type="text" id="nim" required placeholder="Contoh: 12345678">
+                        </div>
+                        <div class="form-group">
+                            <label for="nama">Nama Lengkap</label>
+                            <input type="text" id="nama" required placeholder="Nama Mahasiswa">
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" required placeholder="nama@kampus.com">
+                        </div>
+                        <div class="form-group">
+                            <label for="tipeMhs">Kategori Mahasiswa</label>
+                            <select id="tipeMhs" onchange="toggleBeasiswaField()">
+                                <option value="Reguler">Reguler</option>
+                                <option value="Beasiswa">Penerima Beasiswa</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="beasiswaGroup" style="display:none;">
+                            <label for="beasiswa">Nama Beasiswa</label>
+                            <input type="text" id="beasiswa" placeholder="Contoh: Bidikmisi / Djarum">
+                        </div>
+                        <button type="submit" class="btn-success btn-block" id="btnSubmit">Simpan Data</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h2>Ekspor / Impor Berkas (File I/O)</h2>
+                    <button class="btn-primary btn-block" onclick="controller.exportToFile()" style="margin-bottom:10px;">Unduh Data (.txt JSON)</button>
+                    <input type="file" id="fileInput" accept=".txt" style="display:none;" onchange="controller.importFromFile(event)">
+                    <button class="btn-primary btn-block" onclick="document.getElementById('fileInput').click()">Unggah Data (.txt JSON)</button>
+                </div>
+            </div>
+
+            <div>
+                <div class="card">
+                    <h2>Fitur Pencarian & Pengurutan</h2>
+                    <div class="flex-actions">
+                        <input type="text" id="searchKey" placeholder="Cari berdasarkan NIM atau Nama...">
+                        <select id="searchMethod">
+                            <option value="linear">Berdasarkan NIM Search</option>
+                            <option value="binary">Binary Search (Butuh Di-sort dulu)</option>
+                        </select>
+                        <button class="btn-primary" onclick="controller.handleSearch()">Cari</button>
+                    </div>
+                    <div class="flex-actions">
+                        <select id="sortMethod">
+                            <option value="bubble">(Berdasarkan NIM)</option>
+                            <option value="insertion"> (Berdasarkan Nama)</option>
+                        </select>
+                        <button class="btn-primary" onclick="controller.handleSort()">Urutkan</button>
+                        <button class="btn-danger" onclick="controller.renderTable()">Reset Filter</button>
+                    </div>
+                </div>
+
+                <div class="card" style="overflow-x: auto;">
+                    <h2>Daftar Mahasiswa</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>NIM</th>
+                                <th>Nama</th>
+                                <th>Email</th>
+                                <th>Kategori / Keterangan</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentTableBody">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ============================================================================
+// SISTEM AUTENTIKASI (LOGIN & LOGOUT DENGAN TRY-CATCH)
+// ============================================================================
+class AuthSystem {
+    #usernameBenar = "admin";
+    #passwordBenar = "admin123";
+
+    login(usernameInput, passwordInput) {
+        try {
+            if (usernameInput === this.#usernameBenar && passwordInput === this.#passwordBenar) {
+                document.getElementById("loginPage").style.display = "none";
+                document.getElementById("mainApp").style.display = "block";
+                return true;
+            } else {
+                throw new Error("Autentikasi Gagal: Username atau Password salah!");
+            }
+        } catch (error) {
+            alert(error.message);
+            return false;
+        }
+    }
+
+    logout() {
+        document.getElementById("loginForm").reset();
+        document.getElementById("mainApp").style.display = "none";
+        document.getElementById("loginPage").style.display = "flex";
+    }
+}
+
+const auth = new AuthSystem();
+
+document.getElementById("loginForm").addEventListener("submit", function(e) {
+    e.preventDefault();
+    const u = document.getElementById("username").value;
+    const p = document.getElementById("password").value;
+    auth.login(u, p);
+});
+
+
+// ============================================================================
+// 1. PENERAPAN OOP (CLASS, ENKAPSULASI, PEWARISAN, POLIMORFISME)
+// ============================================================================
+class Mahasiswa {
+    #nim; 
+    #nama;
+    #email;
+
+    constructor(nim, nama, email) {
+        this.#nim = nim;
+        this.#nama = nama;
+        this.#email = email;
+    }
+
+    get nim() { return this.#nim; }
+    get nama() { return this.#nama; }
+    get email() { return this.#email; }
+
+    set nama(namaBaru) { this.#nama = namaBaru; }
+    set email(emailBaru) { this.#email = emailBaru; }
+
+    getInfo() {
+        return "Mahasiswa Reguler";
+    }
+
+    toJSON() {
+        return { nim: this.#nim, nama: this.#nama, email: this.#email, tipe: "Reguler" };
+    }
+}
+
+class MahasiswaBeasiswa extends Mahasiswa {
+    constructor(nim, nama, email, namaBeasiswa) {
+        super(nim, nama, email); 
+        this.namaBeasiswa = namaBeasiswa;
+    }
+
+    getInfo() {
+        return `Beasiswa: ${this.namaBeasiswa}`;
+    }
+
+    toJSON() {
+        return { nim: this.nim, nama: this.nama, email: this.email, tipe: "Beasiswa", beasiswa: this.namaBeasiswa };
+    }
+}
+
+// ============================================================================
+// 2. SISTEM MANAJEMEN CORE (FUNGSI, ARRAY, POINTER/REFERENSI)
+// ============================================================================
+class MahasiswaController {
+    constructor() {
+        this.daftarMahasiswa = [];
+    }
+
+    tambahMahasiswa(nim, nama, email, tipe, beasiswa) {
+        try {
+            const nimRegex = /^[0-9]{8}$/;
+            if (!nimRegex.test(nim)) {
+                throw new Error("Validasi Gagal: NIM harus terdiri dari tepat 8 digit angka!");
+            }
+
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                throw new Error("Validasi Gagal: Format email tidak valid!");
+            }
+
+            if (this.daftarMahasiswa.some(m => m.nim === nim)) {
+                throw new Error("Validasi Gagal: Mahasiswa dengan NIM tersebut sudah terdaftar!");
+            }
+
+            let mhs;
+            if (tipe === "Beasiswa") {
+                mhs = new MahasiswaBeasiswa(nim, nama, email, beasiswa);
+            } else {
+                mhs = new Mahasiswa(nim, nama, email);
+            }
+
+            this.daftarMahasiswa.push(mhs);
+            this.renderTable();
+            return true;
+        } catch (error) {
+            alert(error.message); 
+            return false;
+        }
+    }
+
+    editMahasiswa(index, nama, email, tipe, beasiswa) {
+        try {
+            let mhs = this.daftarMahasiswa[index];
+            if (!mhs) throw new Error("Data mahasiswa tidak ditemukan!");
+
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) throw new Error("Format email salah!");
+
+            if (tipe === "Beasiswa") {
+                this.daftarMahasiswa[index] = new MahasiswaBeasiswa(mhs.nim, nama, email, beasiswa);
+            } else {
+                this.daftarMahasiswa[index] = new Mahasiswa(mhs.nim, nama, email);
+            }
+            
+            this.renderTable();
+            return true;
+        } catch (error) {
+            alert(error.message);
+            return false;
+        }
+    }
+
+    hapusMahasiswa(index) {
+        if (confirm("Apakah Anda yakin ingin menghapus data ini?")) {
+            this.daftarMahasiswa.splice(index, 1);
+            this.renderTable();
+        }
+    }
+
+    // ============================================================================
+    // 3. ALGORITMA SEARCHING (LINEAR & BINARY SEARCH)
+    // ============================================================================
+    handleSearch() {
+        const key = document.getElementById("searchKey").value.toLowerCase();
+        const method = document.getElementById("searchMethod").value;
+        
+        if (!key) {
+            this.renderTable();
+            return;
+        }
+
+        let hasil = [];
+        if (method === "linear") {
+            hasil = this.daftarMahasiswa.filter(mjs => 
+                mjs.nim.toLowerCase().includes(key) || mjs.nama.toLowerCase().includes(key)
+            );
+        } else {
+            let sortedList = [...this.daftarMahasiswa].sort((a,b) => a.nim.localeCompare(b.nim));
+            let low = 0;
+            let high = sortedList.length - 1;
+            let foundIndex = -1;
+
+            while (low <= high) {
+                let mid = Math.floor((low + high) / 2);
+                if (sortedList[mid].nim === key) {
+                    foundIndex = mid;
+                    break;
+                } else if (sortedList[mid].nim < key) {
+                    low = mid + 1;
+                } else {
+                    high = mid - 1;
+                }
+            }
+            if (foundIndex !== -1) hasil.push(sortedList[foundIndex]);
+        }
+        this.renderTable(hasil);
+    }
+
+    // ============================================================================
+    // 4. ALGORITMA SORTING (BUBBLE & INSERTION SORT)
+    // ============================================================================
+    handleSort() {
+        const method = document.getElementById("sortMethod").value;
+        let data = [...this.daftarMahasiswa];
+
+        if (method === "bubble") {
+            let n = data.length;
+            for (let i = 0; i < n-1; i++) {
+                for (let j = 0; j < n-i-1; j++) {
+                    if (data[j].nim > data[j+1].nim) {
+                        let temp = data[j];
+                        data[j] = data[j+1];
+                        data[j+1] = temp;
+                    }
+                }
+            }
+        } else if (method === "insertion") {
+            let n = data.length;
+            for (let i = 1; i < n; i++) {
+                let keyObj = data[i];
+                let j = i - 1;
+                while (j >= 0 && data[j].nama.localeCompare(keyObj.nama) > 0) {
+                    data[j + 1] = data[j];
+                    j = j - 1;
+                }
+                data[j + 1] = keyObj;
+            }
+        }
+        this.daftarMahasiswa = data;
+        this.renderTable();
+    }
+
+    // ============================================================================
+    // 5. FITUR FILE I/O
+    // ============================================================================
+    exportToFile() {
+        const rawData = JSON.stringify(this.daftarMahasiswa.map(m => m.toJSON()), null, 2);
+        const blob = new Blob([rawData], { type: "text/plain;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "database_mahasiswa.txt";
+        link.click();
+    }
+
+    importFromFile(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const parsed = JSON.parse(e.target.result);
+                this.daftarMahasiswa = parsed.map(item => {
+                    if (item.tipe === "Beasiswa") {
+                        return new MahasiswaBeasiswa(item.nim, item.nama, item.email, item.beasiswa);
+                    }
+                    return new Mahasiswa(item.nim, item.nama, item.email);
+                });
+                this.renderTable();
+                alert("Data Berhasil Diimpor!");
+            } catch (err) {
+                alert("Gagal membaca berkas: Format berkas TXT tidak valid.");
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    renderTable(dataSet = null) {
+        const target = dataSet || this.daftarMahasiswa;
+        const tbody = document.getElementById("studentTableBody");
+        tbody.innerHTML = "";
+
+        target.forEach((mhs, index) => {
+            const originalIndex = this.daftarMahasiswa.findIndex(x => x.nim === mhs.nim);
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td><strong>${mhs.nim}</strong></td>
+                <td>${mhs.nama}</td>
+                <td>${mhs.email}</td>
+                <td><em>${mhs.getInfo()}</em></td>
+                <td>
+                    <button class="btn-primary" onclick="setupEdit(${originalIndex})">Edit</button>
+                    <button class="btn-danger" onclick="controller.hapusMahasiswa(${originalIndex})">Hapus</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+}
+
+const controller = new MahasiswaController();
+
+function toggleBeasiswaField() {
+    const tipe = document.getElementById("tipeMhs").value;
+    document.getElementById("beasiswaGroup").style.display = (tipe === "Beasiswa") ? "block" : "none";
+}
+
+function setupEdit(index) {
+    const mhs = controller.daftarMahasiswa[index];
+    document.getElementById("editIndex").value = index;
+    document.getElementById("nim").value = mhs.nim;
+    document.getElementById("nim").disabled = true; 
+    document.getElementById("nama").value = mhs.nama;
+    document.getElementById("email").value = mhs.email;
+    
+    if (mhs instanceof MahasiswaBeasiswa) {
+        document.getElementById("tipeMhs").value = "Beasiswa";
+        document.getElementById("beasiswa").value = mhs.namaBeasiswa;
+    } else {
+        document.getElementById("tipeMhs").value = "Reguler";
+    }
+    toggleBeasiswaField();
+    document.getElementById("btnSubmit").textContent = "Update Data";
+}
+
+document.getElementById("studentForm").addEventListener("submit", function(e) {
+    e.preventDefault();
+    const editIndex = parseInt(document.getElementById("editIndex").value);
+    const nim = document.getElementById("nim").value;
+    const nama = document.getElementById("nama").value;
+    const email = document.getElementById("email").value;
+    const tipe = document.getElementById("tipeMhs").value;
+    const beasiswa = document.getElementById("beasiswa").value;
+
+    let sukses = false;
+    if (editIndex === -1) {
+        sukses = controller.tambahMahasiswa(nim, nama, email, tipe, beasiswa);
+    } else {
+        sukses = controller.editMahasiswa(editIndex, nama, email, tipe, beasiswa);
+    }
+
+    if (sukses) {
+        document.getElementById("studentForm").reset();
+        document.getElementById("editIndex").value = "-1";
+        document.getElementById("nim").disabled = false;
+        document.getElementById("btnSubmit").textContent = "Simpan Data";
+        toggleBeasiswaField();
+    }
+});
+
+// Menambahkan data awal ke dalam array sistem
+controller.tambahMahasiswa("22010005", "Zacky Ahmad", "zacky@domain.com", "Reguler");
+controller.tambahMahasiswa("22010001", "Aditya Pratama", "adit@domain.com", "Beasiswa", "Taekondow");
+controller.tambahMahasiswa("22010003", "Citra Kirana", "citra@domain.com", "Reguler");
+controller.tambahMahasiswa("22010002", "Kirana Guavav", "kirana@domain.com", "Reguler");
+controller.tambahMahasiswa("22010004", "Abila Bakti", "abi@domain.com", "Reguler");
+controller.tambahMahasiswa("22010006", "Ridho Anugrah", "anugrah@domain.com", "Reguler");
+</script>
+
+</body>
+</html>
